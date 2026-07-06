@@ -13,3 +13,4 @@ D:\HelpDesk\help-desk-be\HelpDesk\HelpDesk.Repositories\obj\Debug\net8.0\HelpDes
 D:\HelpDesk\help-desk-be\HelpDesk\HelpDesk.Repositories\obj\Debug\net8.0\refint\HelpDesk.Repositories.dll
 D:\HelpDesk\help-desk-be\HelpDesk\HelpDesk.Repositories\obj\Debug\net8.0\HelpDesk.Repositories.pdb
 D:\HelpDesk\help-desk-be\HelpDesk\HelpDesk.Repositories\obj\Debug\net8.0\ref\HelpDesk.Repositories.dll
+D:\HelpDesk\help-desk-be\HelpDesk\HelpDesk.Repositories\obj\Debug\net8.0\HelpDesk.Repositories.sourcelink.json

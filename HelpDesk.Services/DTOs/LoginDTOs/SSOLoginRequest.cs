@@ -2,5 +2,5 @@ namespace HelpDesk.Services.DTOs;
 
 public class SSOLoginRequest
 {
-    public string token { get; set; } = String.Empty;
+    public string Token { get; set; } = String.Empty;
 }

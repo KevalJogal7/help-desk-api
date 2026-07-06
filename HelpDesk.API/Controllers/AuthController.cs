@@ -1,23 +1,18 @@
-using System.Security.Claims;
+namespace HelpDesk.API.Controllers;
+
 using HelpDesk.Domain.Entities;
 using HelpDesk.Services.DTOs;
 using HelpDesk.Services.Interfaces;
-using HelpDesk.Services.Services;
 using Microsoft.AspNetCore.Mvc;
-
-namespace HelpDesk.API.Controllers;
-
 [ApiController]
 [Route("api/[controller]")]
 public class AuthController : ControllerBase
 {
     private readonly IAuthService _authService;
-    private readonly AzureTokenValidator _azureTokenValidator;
 
-    public AuthController(IAuthService authService, AzureTokenValidator azureTokenValidator)
+    public AuthController(IAuthService authService)
     {
         _authService = authService;
-        _azureTokenValidator = azureTokenValidator;
     }
 
     [HttpPost("login")]
@@ -25,35 +20,22 @@ public class AuthController : ControllerBase
     {
         var response = await _authService.Login(request);
 
-        if (response == null) return Unauthorized();
-
-        return Ok(response);
+        return StatusCode(response.StatusCode, response);
     }
 
     [HttpPost("sso-login")]
     public async Task<IActionResult> SSOLogin(SSOLoginRequest request)
     {
-        ClaimsPrincipal principal = await _azureTokenValidator.ValidateAsync(request.token);
-        var email = principal.FindFirst("preferred_username")?.Value;
-        LoginRequest req = new LoginRequest()
-        {
-            Email = email,
-            Password = ""
-        };
+        var response = await _authService.SSOLogin(request.Token);
 
-        var response = await _authService.Login(req, true);
-
-        if (response == null) return Unauthorized();
-
-        return Ok(response);
+        return StatusCode(response.StatusCode, response);
     }
 
     [HttpPost("register")]
     public async Task<IActionResult> Register(RegisterRequest request)
     {
-        User? response = await _authService.Register(request);
+        var response = await _authService.Register(request);
 
-        if (response == null) return Unauthorized();
-        return Ok();
+        return StatusCode(response.StatusCode, response);
     }
 }

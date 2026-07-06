@@ -12,3 +12,4 @@ D:\HelpDesk\help-desk-be\HelpDesk\HelpDesk.Domain\obj\Debug\net8.0\refint\HelpDe
 D:\HelpDesk\help-desk-be\HelpDesk\HelpDesk.Domain\obj\Debug\net8.0\HelpDesk.Domain.pdb
 D:\HelpDesk\help-desk-be\HelpDesk\HelpDesk.Domain\obj\Debug\net8.0\HelpDesk.Domain.genruntimeconfig.cache
 D:\HelpDesk\help-desk-be\HelpDesk\HelpDesk.Domain\obj\Debug\net8.0\ref\HelpDesk.Domain.dll
+D:\HelpDesk\help-desk-be\HelpDesk\HelpDesk.Domain\obj\Debug\net8.0\HelpDesk.Domain.sourcelink.json
