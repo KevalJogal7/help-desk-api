@@ -1,10 +1,12 @@
+using HelpDesk.Services.Constants;
+
 namespace HelpDesk.Services.DTOs.Common;
 
 public static class ResponseFactory
 {
     public static BaseResponse<T> Success<T>(
         T data,
-        string message = "Success",
+        string message = Messages.General.Success,
         int statusCode = 200)
     {
         return new BaseResponse<T>

@@ -1,6 +1,7 @@
 using System.Security.Claims;
 using HelpDesk.Domain.Entities;
 using HelpDesk.Repositories.Interfaces;
+using HelpDesk.Services.Constants;
 using HelpDesk.Services.DTOs;
 using HelpDesk.Services.DTOs.Common;
 using HelpDesk.Services.Enums;
@@ -33,7 +34,7 @@ public class AuthService : IAuthService
         if (user == null)
         {
             return ResponseFactory.Failure<LoginResponse>(
-                "Invalid email or password",
+                Messages.Auth.InvalidCredentials,
                 StatusCodes.Status401Unauthorized
             );
         }
@@ -41,7 +42,7 @@ public class AuthService : IAuthService
         if (!user.IsActive)
         {
             return ResponseFactory.Failure<LoginResponse>(
-                "Your account is inactive.",
+                Messages.Auth.AccountInactive,
                 StatusCodes.Status403Forbidden
             );
         }
@@ -49,7 +50,7 @@ public class AuthService : IAuthService
         if (user.IsDeleted)
         {
             return ResponseFactory.Failure<LoginResponse>(
-                "User account has been deleted.",
+                Messages.Auth.AccountDeleted,
                 StatusCodes.Status403Forbidden
             );
         }
@@ -64,7 +65,7 @@ public class AuthService : IAuthService
             if (result == PasswordVerificationResult.Failed)
             {
                 return ResponseFactory.Failure<LoginResponse>(
-                    "Invalid email or password",
+                    Messages.Auth.InvalidCredentials,
                     StatusCodes.Status401Unauthorized
                 );
             }
@@ -83,7 +84,7 @@ public class AuthService : IAuthService
 
         return ResponseFactory.Success(
             response,
-            "Login successful",
+            Messages.Auth.LoginSuccess,
             StatusCodes.Status200OK
         );
     }
@@ -97,7 +98,7 @@ public class AuthService : IAuthService
         if (string.IsNullOrWhiteSpace(email))
         {
             return ResponseFactory.Failure<LoginResponse>(
-                "Unable to retrieve email from Azure AD token.",
+                Messages.Auth.SSOEmailRetrievalFailed,
                 StatusCodes.Status401Unauthorized
             );
         }
@@ -118,7 +119,7 @@ public class AuthService : IAuthService
         if (existingUser != null)
         {
             return ResponseFactory.Failure<object>(
-                "A user with this email already exists.",
+                Messages.Auth.EmailAlreadyExists,
                 StatusCodes.Status409Conflict
             );
         }
@@ -139,7 +140,7 @@ public class AuthService : IAuthService
 
         return ResponseFactory.Success<object>(
             null,
-            "User registered successfully.",
+            Messages.Auth.RegisterSuccess,
             StatusCodes.Status201Created
         );
     }

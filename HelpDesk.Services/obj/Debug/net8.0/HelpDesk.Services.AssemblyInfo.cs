@@ -13,7 +13,7 @@ using System.Reflection;
 [assembly: System.Reflection.AssemblyCompanyAttribute("HelpDesk.Services")]
 [assembly: System.Reflection.AssemblyConfigurationAttribute("Debug")]
 [assembly: System.Reflection.AssemblyFileVersionAttribute("1.0.0.0")]
-[assembly: System.Reflection.AssemblyInformationalVersionAttribute("1.0.0+28afe66c370b52c5886ae90f0809d46dff9d49ff")]
+[assembly: System.Reflection.AssemblyInformationalVersionAttribute("1.0.0+d7944358495fcfebf58bbb5ea22f986e89d9fb20")]
 [assembly: System.Reflection.AssemblyProductAttribute("HelpDesk.Services")]
 [assembly: System.Reflection.AssemblyTitleAttribute("HelpDesk.Services")]
 [assembly: System.Reflection.AssemblyVersionAttribute("1.0.0.0")]

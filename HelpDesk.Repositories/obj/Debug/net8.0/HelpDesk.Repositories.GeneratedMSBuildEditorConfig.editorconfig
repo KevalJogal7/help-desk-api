@@ -8,6 +8,6 @@ build_property.PlatformNeutralAssembly =
 build_property.EnforceExtendedAnalyzerRules = 
 build_property._SupportedPlatformList = Linux,macOS,Windows
 build_property.RootNamespace = HelpDesk.Repositories
-build_property.ProjectDir = D:\HelpDesk\help-desk-be\HelpDesk\HelpDesk.Repositories\
+build_property.ProjectDir = d:\HelpDesk\help-desk-be\HelpDesk\HelpDesk.Repositories\
 build_property.EnableComHosting = 
 build_property.EnableGeneratedComInterfaceComImportInterop = 
