@@ -38,4 +38,12 @@ public class AuthController : ControllerBase
 
         return StatusCode(response.StatusCode, response);
     }
+
+    [HttpPost("forgot-password")]
+    public async Task<IActionResult> ForgotPassword(ForgotPasswordRequest request)
+    {
+        var response = await _authService.ForgotPassword(request);
+
+        return StatusCode(response.StatusCode, response);
+    }
 }

@@ -9,6 +9,7 @@ public static class Messages
         public const string AccountInactive = "Your account is inactive.";
         public const string AccountDeleted = "User account has been deleted.";
         public const string LoginSuccess = "Login successful";
+        public const string UserNotExists = "A user is not exists.";
 
         // SSO
         public const string SSOEmailRetrievalFailed = "Unable to retrieve email from Azure AD token.";

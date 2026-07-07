@@ -9,4 +9,5 @@ public interface IAuthService
     Task<BaseResponse<LoginResponse>> Login(LoginRequest request, Boolean isSSO = false);
     Task<BaseResponse<LoginResponse>> SSOLogin(string token);
     Task<BaseResponse<object>> Register(RegisterRequest request);
+    Task<BaseResponse<object>> ForgotPassword(ForgotPasswordRequest request);
 }

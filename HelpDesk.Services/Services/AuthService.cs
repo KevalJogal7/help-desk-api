@@ -1,4 +1,5 @@
 using System.Security.Claims;
+using System.Security.Cryptography;
 using HelpDesk.Domain.Entities;
 using HelpDesk.Repositories.Interfaces;
 using HelpDesk.Services.Constants;
@@ -17,13 +18,16 @@ public class AuthService : IAuthService
     private readonly IJwtService _jwtService;
     private readonly PasswordHasher<User> _passwordHasher;
     private readonly AzureTokenValidator _azureTokenValidator;
+    private readonly IEmailService _emailService;
 
-    public AuthService(IUserRepository repository, IJwtService jwtService, AzureTokenValidator azureTokenValidator)
+
+    public AuthService(IUserRepository repository, IJwtService jwtService, AzureTokenValidator azureTokenValidator, IEmailService emailService)
     {
         _passwordHasher = new PasswordHasher<User>();
         _repository = repository;
         _jwtService = jwtService;
         _azureTokenValidator = azureTokenValidator;
+        _emailService = emailService;
     }
 
 
@@ -54,6 +58,11 @@ public class AuthService : IAuthService
                 StatusCodes.Status403Forbidden
             );
         }
+
+        //  await _emailService.SendEmailAsync(
+        //     request.Email,
+        //     "Welcome",
+        //     "<h1>Welcome to Help Desk</h1>");
 
         if (!isSSO)
         {
@@ -143,5 +152,61 @@ public class AuthService : IAuthService
             Messages.Auth.RegisterSuccess,
             StatusCodes.Status201Created
         );
+    }
+
+    public async Task<BaseResponse<object>> ForgotPassword(ForgotPasswordRequest request)
+    {
+        var user = await _repository.GetByEmailAsync(request.Email);
+
+        if (user == null)
+        {
+            return ResponseFactory.Failure<object>(
+                Messages.Auth.UserNotExists,
+                StatusCodes.Status401Unauthorized
+            );
+        }
+
+        if (!user.IsActive)
+        {
+            return ResponseFactory.Failure<object>(
+                Messages.Auth.AccountInactive,
+                StatusCodes.Status403Forbidden
+            );
+        }
+
+        if (user.IsDeleted)
+        {
+            return ResponseFactory.Failure<object>(
+                Messages.Auth.AccountDeleted,
+                StatusCodes.Status403Forbidden
+            );
+        }
+
+        var token = GenerateToken();
+
+        // var resetToken = new PasswordResetToken
+        // {
+        //     UserId = user.Id,
+        //     Token = token,
+        //     ExpiryDate = DateTime.UtcNow.AddMinutes(30),
+        //     CreatedAt = DateTime.UtcNow,
+        //     IsUsed = false
+        // };
+
+        // await _passwordResetRepository.Add(resetToken);
+
+        // var resetLink = $"https://localhost:5173/reset-password?token={Uri.EscapeDataString(token)}";
+
+        // await _emailService.SendEmailAsync(user.Email, "Reset Password", resetLink);
+
+        return ResponseFactory.Success<object>(null);
+    }
+
+
+    public static string GenerateToken()
+    {
+        var bytes = RandomNumberGenerator.GetBytes(32);
+
+        return Convert.ToBase64String(bytes);
     }
 }

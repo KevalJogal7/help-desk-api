@@ -1,6 +1,7 @@
 using HelpDesk.Domain.Context;
 using HelpDesk.Repositories.Interfaces;
 using HelpDesk.Repositories.Repositories;
+using HelpDesk.Services.DTOs.Common;
 using HelpDesk.Services.Interfaces;
 using HelpDesk.Services.Services;
 using Microsoft.EntityFrameworkCore;
@@ -28,8 +29,13 @@ builder.Services.AddSwaggerGen();
 builder.Services.AddDbContext<AppDbContext>(options =>
     options.UseNpgsql(builder.Configuration.GetConnectionString("DefaultConnection")));
 
+builder.Services.Configure<EmailSettings>(
+    builder.Configuration.GetSection("EmailSettings"));
+
+
 builder.Services.AddScoped<IUserRepository, UserRepository>();
 
+builder.Services.AddScoped<IEmailService, EmailService>();
 builder.Services.AddScoped<IAuthService, AuthService>();
 builder.Services.AddScoped<IJwtService, JwtService>();
 builder.Services.AddScoped<AzureTokenValidator>();
