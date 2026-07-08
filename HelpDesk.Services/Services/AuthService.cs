@@ -1,3 +1,4 @@
+using System.Net.Mail;
 using System.Security.Claims;
 using System.Security.Cryptography;
 using HelpDesk.Domain.Entities;
@@ -9,6 +10,7 @@ using HelpDesk.Services.Enums;
 using HelpDesk.Services.Interfaces;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Identity;
+using Microsoft.Extensions.Configuration;
 
 namespace HelpDesk.Services.Services;
 
@@ -19,15 +21,22 @@ public class AuthService : IAuthService
     private readonly PasswordHasher<User> _passwordHasher;
     private readonly AzureTokenValidator _azureTokenValidator;
     private readonly IEmailService _emailService;
+    private readonly HashSet<string> _internalDomains;
 
 
-    public AuthService(IUserRepository repository, IJwtService jwtService, AzureTokenValidator azureTokenValidator, IEmailService emailService)
+    public AuthService(IUserRepository repository, IJwtService jwtService, AzureTokenValidator azureTokenValidator,
+     IEmailService emailService, IConfiguration configuration)
     {
         _passwordHasher = new PasswordHasher<User>();
         _repository = repository;
         _jwtService = jwtService;
         _azureTokenValidator = azureTokenValidator;
         _emailService = emailService;
+        _internalDomains = configuration
+            .GetSection("Authentication:InternalDomains")
+            .Get<string[]>()?
+            .ToHashSet(StringComparer.OrdinalIgnoreCase)
+            ?? new HashSet<string>(StringComparer.OrdinalIgnoreCase);
     }
 
 
@@ -108,6 +117,14 @@ public class AuthService : IAuthService
         {
             return ResponseFactory.Failure<LoginResponse>(
                 Messages.Auth.SSOEmailRetrievalFailed,
+                StatusCodes.Status401Unauthorized
+            );
+        }
+
+        if (!IsInternalEmail(email))
+        {
+            return ResponseFactory.Failure<LoginResponse>(
+                Messages.Auth.InternalUsersOnly,
                 StatusCodes.Status401Unauthorized
             );
         }
@@ -208,5 +225,19 @@ public class AuthService : IAuthService
         var bytes = RandomNumberGenerator.GetBytes(32);
 
         return Convert.ToBase64String(bytes);
+    }
+
+    public bool IsInternalEmail(string email)
+    {
+        try
+        {
+            var mail = new MailAddress(email);
+
+            return _internalDomains.Contains(mail.Host.ToLower());
+        }
+        catch
+        {
+            return false;
+        }
     }
 }

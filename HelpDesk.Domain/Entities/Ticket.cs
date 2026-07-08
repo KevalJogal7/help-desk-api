@@ -22,10 +22,6 @@ public partial class Ticket
 
     public Guid CreatedBy { get; set; }
 
-    public Guid? AssignedTo { get; set; }
-
-    public DateTime? DueDate { get; set; }
-
     public DateTime? ClosedDate { get; set; }
 
     public bool IsDeleted { get; set; }
@@ -40,9 +36,13 @@ public partial class Ticket
 
     public int StatusId { get; set; }
 
-    [ForeignKey("AssignedTo")]
-    [InverseProperty("TicketAssignedToNavigations")]
-    public virtual User? AssignedToNavigation { get; set; }
+    public int CategoryId { get; set; }
+
+    public int SubCategoryId { get; set; }
+
+    [ForeignKey("CategoryId")]
+    [InverseProperty("Tickets")]
+    public virtual Category Category { get; set; } = null!;
 
     [ForeignKey("CreatedBy")]
     [InverseProperty("TicketCreatedByNavigations")]
@@ -55,6 +55,10 @@ public partial class Ticket
     [ForeignKey("StatusId")]
     [InverseProperty("Tickets")]
     public virtual TicketStatus Status { get; set; } = null!;
+
+    [ForeignKey("SubCategoryId")]
+    [InverseProperty("Tickets")]
+    public virtual SubCategory SubCategory { get; set; } = null!;
 
     [InverseProperty("Ticket")]
     public virtual ICollection<TicketAssignment> TicketAssignments { get; set; } = new List<TicketAssignment>();

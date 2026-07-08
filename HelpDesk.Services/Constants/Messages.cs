@@ -13,6 +13,7 @@ public static class Messages
 
         // SSO
         public const string SSOEmailRetrievalFailed = "Unable to retrieve email from Azure AD token.";
+        public const string InternalUsersOnly = "This sign-in method is available only for internal users.";
 
         // Registration
         public const string EmailAlreadyExists = "A user with this email already exists.";

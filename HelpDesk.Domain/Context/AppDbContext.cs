@@ -18,7 +18,11 @@ public partial class AppDbContext : DbContext
 
     public virtual DbSet<AuditLog> AuditLogs { get; set; }
 
+    public virtual DbSet<Category> Categories { get; set; }
+
     public virtual DbSet<Role> Roles { get; set; }
+
+    public virtual DbSet<SubCategory> SubCategories { get; set; }
 
     public virtual DbSet<Ticket> Tickets { get; set; }
 
@@ -56,12 +60,32 @@ public partial class AppDbContext : DbContext
                 .HasConstraintName("AuditLogs_PerformedBy_fkey");
         });
 
+        modelBuilder.Entity<Category>(entity =>
+        {
+            entity.HasKey(e => e.Id).HasName("Categories_pkey");
+
+            entity.Property(e => e.CreatedOn).HasDefaultValueSql("CURRENT_TIMESTAMP");
+            entity.Property(e => e.IsActive).HasDefaultValue(true);
+        });
+
         modelBuilder.Entity<Role>(entity =>
         {
             entity.HasKey(e => e.RoleId).HasName("Roles_pkey");
 
             entity.Property(e => e.RoleId).UseIdentityAlwaysColumn();
             entity.Property(e => e.CreatedOn).HasDefaultValueSql("CURRENT_TIMESTAMP");
+        });
+
+        modelBuilder.Entity<SubCategory>(entity =>
+        {
+            entity.HasKey(e => e.Id).HasName("SubCategories_pkey");
+
+            entity.Property(e => e.CreatedOn).HasDefaultValueSql("CURRENT_TIMESTAMP");
+            entity.Property(e => e.IsActive).HasDefaultValue(true);
+
+            entity.HasOne(d => d.Category).WithMany(p => p.SubCategories)
+                .OnDelete(DeleteBehavior.ClientSetNull)
+                .HasConstraintName("fk_sub_categories_category");
         });
 
         modelBuilder.Entity<Ticket>(entity =>
@@ -72,7 +96,9 @@ public partial class AppDbContext : DbContext
             entity.Property(e => e.CreatedOn).HasDefaultValueSql("CURRENT_TIMESTAMP");
             entity.Property(e => e.IsDeleted).HasDefaultValue(false);
 
-            entity.HasOne(d => d.AssignedToNavigation).WithMany(p => p.TicketAssignedToNavigations).HasConstraintName("fk_tickets_assigned_to");
+            entity.HasOne(d => d.Category).WithMany(p => p.Tickets)
+                .OnDelete(DeleteBehavior.ClientSetNull)
+                .HasConstraintName("fk_tickets_category");
 
             entity.HasOne(d => d.CreatedByNavigation).WithMany(p => p.TicketCreatedByNavigations)
                 .OnDelete(DeleteBehavior.ClientSetNull)
@@ -85,6 +111,10 @@ public partial class AppDbContext : DbContext
             entity.HasOne(d => d.Status).WithMany(p => p.Tickets)
                 .OnDelete(DeleteBehavior.ClientSetNull)
                 .HasConstraintName("fk_tickets_status");
+
+            entity.HasOne(d => d.SubCategory).WithMany(p => p.Tickets)
+                .OnDelete(DeleteBehavior.ClientSetNull)
+                .HasConstraintName("fk_tickets_sub_category");
 
             entity.HasOne(d => d.UpdatedByNavigation).WithMany(p => p.TicketUpdatedByNavigations).HasConstraintName("fk_tickets_updated_by");
         });
