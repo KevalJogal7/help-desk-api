@@ -1,4 +1,4 @@
-namespace HelpDesk.Services.DTOs;
+namespace HelpDesk.Services.DTOs.RegisterDTOs;
 
 using System.ComponentModel.DataAnnotations;
 using HelpDesk.Services.Constants;

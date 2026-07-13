@@ -1,7 +1,8 @@
 namespace HelpDesk.API.Controllers;
 
-using HelpDesk.Domain.Entities;
-using HelpDesk.Services.DTOs;
+using HelpDesk.Services.DTOs.ForgotPasswordDTOs;
+using HelpDesk.Services.DTOs.LoginDTOs;
+using HelpDesk.Services.DTOs.RegisterDTOs;
 using HelpDesk.Services.Interfaces;
 using Microsoft.AspNetCore.Mvc;
 [ApiController]

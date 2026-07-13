@@ -1,4 +1,4 @@
-namespace HelpDesk.Services.DTOs;
+namespace HelpDesk.Services.DTOs.LoginDTOs;
 
 public class SSOLoginRequest
 {

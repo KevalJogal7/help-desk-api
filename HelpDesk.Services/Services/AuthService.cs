@@ -1,11 +1,12 @@
 using System.Net.Mail;
 using System.Security.Claims;
-using System.Security.Cryptography;
 using HelpDesk.Domain.Entities;
 using HelpDesk.Repositories.Interfaces;
 using HelpDesk.Services.Constants;
-using HelpDesk.Services.DTOs;
 using HelpDesk.Services.DTOs.Common;
+using HelpDesk.Services.DTOs.ForgotPasswordDTOs;
+using HelpDesk.Services.DTOs.LoginDTOs;
+using HelpDesk.Services.DTOs.RegisterDTOs;
 using HelpDesk.Services.Enums;
 using HelpDesk.Services.Interfaces;
 using Microsoft.AspNetCore.Http;
@@ -23,15 +24,17 @@ public class AuthService : IAuthService
     private readonly IEmailService _emailService;
     private readonly HashSet<string> _internalDomains;
 
+    private readonly IHttpContextAccessor _httpContextAccessor;
 
     public AuthService(IUserRepository repository, IJwtService jwtService, AzureTokenValidator azureTokenValidator,
-     IEmailService emailService, IConfiguration configuration)
+     IEmailService emailService, IConfiguration configuration, IHttpContextAccessor httpContextAccessor)
     {
         _passwordHasher = new PasswordHasher<User>();
         _repository = repository;
         _jwtService = jwtService;
         _azureTokenValidator = azureTokenValidator;
         _emailService = emailService;
+        _httpContextAccessor = httpContextAccessor;
         _internalDomains = configuration
             .GetSection("Authentication:InternalDomains")
             .Get<string[]>()?
@@ -39,6 +42,7 @@ public class AuthService : IAuthService
             ?? new HashSet<string>(StringComparer.OrdinalIgnoreCase);
     }
 
+    private ClaimsPrincipal User => _httpContextAccessor.HttpContext!.User;
 
     public async Task<BaseResponse<LoginResponse>> Login(LoginRequest request, bool isSSO = false)
     {
@@ -68,11 +72,6 @@ public class AuthService : IAuthService
             );
         }
 
-        //  await _emailService.SendEmailAsync(
-        //     request.Email,
-        //     "Welcome",
-        //     "<h1>Welcome to Help Desk</h1>");
-
         if (!isSSO)
         {
             var result = _passwordHasher.VerifyHashedPassword(
@@ -89,14 +88,15 @@ public class AuthService : IAuthService
             }
         }
 
-        var token = _jwtService.GenerateToken(user);
+        var token = _jwtService.GenerateJwtToken(user);
+        var role = (RoleEnum)user.RoleId;
 
         var response = new LoginResponse
         {
             AccessToken = token,
             RefreshToken = "",
             UserName = $"{user.FirstName} {user.LastName}",
-            RoleId = user.RoleId,
+            Role = role.ToString(),
             Expiration = DateTime.UtcNow.AddHours(1)
         };
 
@@ -199,7 +199,7 @@ public class AuthService : IAuthService
             );
         }
 
-        var token = GenerateToken();
+        var token = _jwtService.GenerateToken();
 
         // var resetToken = new PasswordResetToken
         // {
@@ -219,14 +219,9 @@ public class AuthService : IAuthService
         return ResponseFactory.Success<object>(null);
     }
 
+    public string Email => User.FindFirstValue(ClaimTypes.Email)!;
 
-    public static string GenerateToken()
-    {
-        var bytes = RandomNumberGenerator.GetBytes(32);
-
-        return Convert.ToBase64String(bytes);
-    }
-
+    public RoleEnum Role => Enum.Parse<RoleEnum>(User.FindFirstValue(ClaimTypes.Role)!);
     public bool IsInternalEmail(string email)
     {
         try
