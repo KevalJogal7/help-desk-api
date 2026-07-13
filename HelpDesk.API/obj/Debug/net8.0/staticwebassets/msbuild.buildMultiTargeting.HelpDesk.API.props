@@ -1,3 +1,0 @@
-﻿<Project>
-  <Import Project="..\build\HelpDesk.API.props" />
-</Project>
