@@ -25,6 +25,29 @@ public class TicketRepository : ITicketRepository
             .AsQueryable();
     }
 
+    public Task<Ticket?> GetTicketById(Guid id)
+    {
+        return _context.Tickets
+            .Include(t => t.CreatedByNavigation)
+            .Include(t => t.Priority)
+            .Include(t => t.Status)
+            .Include(t => t.Category)
+            .Include(t => t.SubCategory)
+            .FirstOrDefaultAsync(t => t.TicketId == id);
+    }
+
+    public async Task CreateTicket(Ticket ticket)
+    {
+        await _context.Tickets.AddAsync(ticket);
+        await _context.SaveChangesAsync();
+    }
+
+    public async Task UpdateTicket(Ticket ticket)
+    {
+        _context.Tickets.Update(ticket);
+        await _context.SaveChangesAsync();
+    }
+
     public async Task<List<Category>> GetCategoryList()
     {
         return await _context.Categories.ToListAsync();

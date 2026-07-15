@@ -222,6 +222,8 @@ public class AuthService : IAuthService
     public string Email => User.FindFirstValue(ClaimTypes.Email)!;
 
     public RoleEnum Role => Enum.Parse<RoleEnum>(User.FindFirstValue(ClaimTypes.Role)!);
+
+    public Guid UserId => Guid.Parse(User.FindFirstValue(ClaimTypes.NameIdentifier)!);
     public bool IsInternalEmail(string email)
     {
         try

@@ -27,4 +27,9 @@ public class UserRepository : IUserRepository
         return entity.Entity;
     }
 
+    public IQueryable<User> GetUserQuery()
+    {
+        return _context.Users.AsQueryable();
+    }
+
 }

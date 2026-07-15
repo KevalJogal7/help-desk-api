@@ -41,8 +41,24 @@ public static class Messages
         public const string PasswordComplexity = "Password must contain at least one uppercase letter, one lowercase letter, one number, and one special character.";
     }
 
+    public static class Ticket
+    {
+        public const string TitleRequired = "Title is required.";
+        public const string TitleLength = "Title must be between 3 and 250 characters.";
+        public const string DescriptionRequired = "Description is required.";
+        public const string PriorityRequired = "Priority is required.";
+        public const string CategoryRequired = "Category is required.";
+        public const string SubCategoryRequired = "Sub-category is required.";
+        public const string CreateSuccess = "Ticket created successfully.";
+        public const string UpdateSuccess = "Ticket updated successfully.";
+        public const string DeleteSuccess = "Ticket deleted successfully.";
+        public const string TicketClosed = "This ticket is closed.";
+    }
+
     public static class General
     {
         public const string Success = "Success";
+        public const string NotFound = "Not Found";
+        public const string NotAllowed = "You are not allowed to access this.";
     }
 }

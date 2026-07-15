@@ -6,7 +6,7 @@ public static class QueryableExtensions
     public static IQueryable<T> ApplySorting<T>(
         this IQueryable<T> query,
         string? sortBy,
-        bool descending = false)
+        string? sortOrder = "asc")
     {
         if (string.IsNullOrWhiteSpace(sortBy))
             return query;
@@ -22,12 +22,11 @@ public static class QueryableExtensions
 
         var parameter = Expression.Parameter(typeof(T), "x");
         var propertyAccess = Expression.Property(parameter, property);
-
         var orderByExpression = Expression.Lambda(propertyAccess, parameter);
 
-        var methodName = descending
-            ? "OrderByDescending"
-            : "OrderBy";
+        var methodName = string.Equals(sortOrder, "desc", StringComparison.OrdinalIgnoreCase)
+            ? nameof(Queryable.OrderByDescending)
+            : nameof(Queryable.OrderBy);
 
         var result = Expression.Call(
             typeof(Queryable),

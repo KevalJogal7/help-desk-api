@@ -15,4 +15,5 @@ public interface IAuthService
     Task<BaseResponse<object>> ForgotPassword(ForgotPasswordRequest request);
     string Email { get; }
     RoleEnum Role { get; }
+    Guid UserId { get; }
 }

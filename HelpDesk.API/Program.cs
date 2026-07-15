@@ -65,6 +65,7 @@ builder.Services.AddScoped<ITicketRepository, TicketRepository>();
 
 builder.Services.AddScoped<IEmailService, EmailService>();
 builder.Services.AddScoped<IAuthService, AuthService>();
+builder.Services.AddScoped<IUserService, UserService>();
 builder.Services.AddScoped<ITicketService, TicketService>();
 builder.Services.AddScoped<IJwtService, JwtService>();
 builder.Services.AddScoped<AzureTokenValidator>();

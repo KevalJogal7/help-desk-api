@@ -43,10 +43,10 @@ public partial class User
     public virtual Role Role { get; set; } = null!;
 
     [InverseProperty("AssignedByNavigation")]
-    public virtual ICollection<TicketAssignment> TicketAssignmentAssignedByNavigations { get; set; } = new List<TicketAssignment>();
+    public virtual ICollection<Ticket> TicketAssignedByNavigations { get; set; } = new List<Ticket>();
 
     [InverseProperty("AssignedToNavigation")]
-    public virtual ICollection<TicketAssignment> TicketAssignmentAssignedToNavigations { get; set; } = new List<TicketAssignment>();
+    public virtual ICollection<Ticket> TicketAssignedToNavigations { get; set; } = new List<Ticket>();
 
     [InverseProperty("CommentByNavigation")]
     public virtual ICollection<TicketComment> TicketComments { get; set; } = new List<TicketComment>();

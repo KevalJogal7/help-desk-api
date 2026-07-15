@@ -26,8 +26,6 @@ public partial class AppDbContext : DbContext
 
     public virtual DbSet<Ticket> Tickets { get; set; }
 
-    public virtual DbSet<TicketAssignment> TicketAssignments { get; set; }
-
     public virtual DbSet<TicketAttachment> TicketAttachments { get; set; }
 
     public virtual DbSet<TicketComment> TicketComments { get; set; }
@@ -96,6 +94,10 @@ public partial class AppDbContext : DbContext
             entity.Property(e => e.CreatedOn).HasDefaultValueSql("CURRENT_TIMESTAMP");
             entity.Property(e => e.IsDeleted).HasDefaultValue(false);
 
+            entity.HasOne(d => d.AssignedByNavigation).WithMany(p => p.TicketAssignedByNavigations).HasConstraintName("FK_Tickets_AssignedBy_Users");
+
+            entity.HasOne(d => d.AssignedToNavigation).WithMany(p => p.TicketAssignedToNavigations).HasConstraintName("FK_Tickets_AssignedTo_Users");
+
             entity.HasOne(d => d.Category).WithMany(p => p.Tickets)
                 .OnDelete(DeleteBehavior.ClientSetNull)
                 .HasConstraintName("fk_tickets_category");
@@ -117,24 +119,6 @@ public partial class AppDbContext : DbContext
                 .HasConstraintName("fk_tickets_sub_category");
 
             entity.HasOne(d => d.UpdatedByNavigation).WithMany(p => p.TicketUpdatedByNavigations).HasConstraintName("fk_tickets_updated_by");
-        });
-
-        modelBuilder.Entity<TicketAssignment>(entity =>
-        {
-            entity.HasKey(e => e.AssignmentId).HasName("TicketAssignments_pkey");
-
-            entity.Property(e => e.AssignmentId).HasDefaultValueSql("gen_random_uuid()");
-            entity.Property(e => e.AssignedOn).HasDefaultValueSql("CURRENT_TIMESTAMP");
-
-            entity.HasOne(d => d.AssignedByNavigation).WithMany(p => p.TicketAssignmentAssignedByNavigations)
-                .OnDelete(DeleteBehavior.ClientSetNull)
-                .HasConstraintName("TicketAssignments_AssignedBy_fkey");
-
-            entity.HasOne(d => d.AssignedToNavigation).WithMany(p => p.TicketAssignmentAssignedToNavigations)
-                .OnDelete(DeleteBehavior.ClientSetNull)
-                .HasConstraintName("TicketAssignments_AssignedTo_fkey");
-
-            entity.HasOne(d => d.Ticket).WithMany(p => p.TicketAssignments).HasConstraintName("TicketAssignments_TicketId_fkey");
         });
 
         modelBuilder.Entity<TicketAttachment>(entity =>

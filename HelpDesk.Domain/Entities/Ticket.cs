@@ -40,6 +40,18 @@ public partial class Ticket
 
     public int SubCategoryId { get; set; }
 
+    public Guid? AssignedTo { get; set; }
+
+    public Guid? AssignedBy { get; set; }
+
+    [ForeignKey("AssignedBy")]
+    [InverseProperty("TicketAssignedByNavigations")]
+    public virtual User? AssignedByNavigation { get; set; }
+
+    [ForeignKey("AssignedTo")]
+    [InverseProperty("TicketAssignedToNavigations")]
+    public virtual User? AssignedToNavigation { get; set; }
+
     [ForeignKey("CategoryId")]
     [InverseProperty("Tickets")]
     public virtual Category Category { get; set; } = null!;
@@ -59,9 +71,6 @@ public partial class Ticket
     [ForeignKey("SubCategoryId")]
     [InverseProperty("Tickets")]
     public virtual SubCategory SubCategory { get; set; } = null!;
-
-    [InverseProperty("Ticket")]
-    public virtual ICollection<TicketAssignment> TicketAssignments { get; set; } = new List<TicketAssignment>();
 
     [InverseProperty("Ticket")]
     public virtual ICollection<TicketAttachment> TicketAttachments { get; set; } = new List<TicketAttachment>();

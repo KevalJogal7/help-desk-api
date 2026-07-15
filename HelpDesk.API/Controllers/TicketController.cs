@@ -26,7 +26,42 @@ public class TicketController : ControllerBase
         return StatusCode(response.StatusCode, response);
     }
 
+    [HttpGet("{id:guid}")]
+    [Authorize]
+    public async Task<IActionResult> GetById(Guid id)
+    {
+        var response = await _ticketService.GetTicketById(id);
+        return StatusCode(response.StatusCode, response);
+    }
+
+    [HttpPost("upsert")]
+    [Authorize]
+    public async Task<IActionResult> UpsertTicket(UpsertTicketRequest request)
+    {
+        var response = await _ticketService.UpsertTicket(request);
+
+        return StatusCode(response.StatusCode, response);
+    }
+
+    [HttpDelete("delete/{id:guid}")]
+    [Authorize]
+    public async Task<IActionResult> DeleteTicket(Guid id)
+    {
+        var response = await _ticketService.DeleteTicket(id);
+
+        return StatusCode(response.StatusCode, response);
+    }
+
+    [HttpPost("assign")]
+    [Authorize(Roles = nameof(RoleEnum.ADMIN))]
+    public async Task<IActionResult> AssignTicket(TicketAssignRequest request)
+    {
+        var response = await _ticketService.AssignTicket(request);
+        return StatusCode(response.StatusCode, response);
+    }
+
     [HttpGet("category-list")]
+    [Authorize]
     public async Task<IActionResult> GetCategoryList()
     {
         var response = await _ticketService.GetCategoryList();
@@ -35,6 +70,7 @@ public class TicketController : ControllerBase
     }
 
     [HttpGet("sub-category-list")]
+    [Authorize]
     public async Task<IActionResult> GetSubCategoryList()
     {
         var response = await _ticketService.GetSubCategoryList();
@@ -43,6 +79,7 @@ public class TicketController : ControllerBase
     }
 
     [HttpGet("status-list")]
+    [Authorize]
     public async Task<IActionResult> GetStatusList()
     {
         var response = await _ticketService.GetStatusList();
@@ -51,6 +88,7 @@ public class TicketController : ControllerBase
     }
 
     [HttpGet("priority-list")]
+    [Authorize]
     public async Task<IActionResult> GetPriorityList()
     {
         var response = await _ticketService.GetPriorityList();

@@ -1,4 +1,4 @@
-namespace HelpDesk.Services.DTOs.TicketDTOs;
+namespace HelpDesk.Services.DTOs.Common;
 
 public class DropdownOption
 {
