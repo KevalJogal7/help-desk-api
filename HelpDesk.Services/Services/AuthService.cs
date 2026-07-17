@@ -6,6 +6,7 @@ using HelpDesk.Services.Constants;
 using HelpDesk.Services.DTOs.Common;
 using HelpDesk.Services.DTOs.ForgotPasswordDTOs;
 using HelpDesk.Services.DTOs.LoginDTOs;
+using HelpDesk.Services.DTOs.ProfileDTOs;
 using HelpDesk.Services.Enums;
 using HelpDesk.Services.Interfaces;
 using Microsoft.AspNetCore.Http;
@@ -184,6 +185,89 @@ public class AuthService : IAuthService
 
         return ResponseFactory.Success<object>(null);
     }
+
+    public async Task<BaseResponse<ProfileResponse>> GetProfile()
+    {
+        User? user = await _repository.GetUserById(UserId);
+
+        if (user == null)
+        {
+            return ResponseFactory.Failure<ProfileResponse>(
+                Messages.General.NotFound,
+                StatusCodes.Status404NotFound);
+        }
+
+        return ResponseFactory.Success(
+            MapToResponse(user),
+            Messages.General.Success,
+            StatusCodes.Status200OK);
+    }
+
+    public async Task<BaseResponse<ProfileResponse>> UpdateProfile(UpdateProfileRequest request)
+    {
+        User? user = await _repository.GetUserById(UserId);
+
+        if (user == null)
+        {
+            return ResponseFactory.Failure<ProfileResponse>(
+                Messages.General.NotFound,
+                StatusCodes.Status404NotFound);
+        }
+
+        // Update name directly
+        user.Name = request.Name.Trim();
+        user.UpdatedOn = DateTime.UtcNow;
+
+        await _repository.UpdateUser(user);
+
+        return ResponseFactory.Success(
+            MapToResponse(user),
+            Messages.Profile.UpdateSuccess,
+            StatusCodes.Status200OK);
+    }
+
+    public async Task<BaseResponse<object>> ChangePassword(ChangePasswordRequest request)
+    {
+        User? user = await _repository.GetUserById(UserId);
+
+        if (user == null)
+        {
+            return ResponseFactory.Failure<object>(
+                Messages.General.NotFound,
+                StatusCodes.Status404NotFound);
+        }
+
+        var verifyResult = _passwordHasher.VerifyHashedPassword(
+            user,
+            user.PasswordHash!,
+            request.CurrentPassword);
+
+        if (verifyResult == PasswordVerificationResult.Failed)
+        {
+            return ResponseFactory.Failure<object>(
+                Messages.Profile.CurrentPasswordInvalid,
+                StatusCodes.Status400BadRequest);
+        }
+
+        user.PasswordHash = _passwordHasher.HashPassword(user, request.NewPassword);
+        user.UpdatedOn = DateTime.UtcNow;
+
+        await _repository.UpdateUser(user);
+
+        return ResponseFactory.Success<object>(
+            new object(),
+            Messages.Profile.PasswordChangeSuccess,
+            StatusCodes.Status200OK);
+    }
+
+    private static ProfileResponse MapToResponse(User user) => new()
+    {
+        UserId = user.UserId,
+        Name = user.Name,
+        Email = user.Email,
+        Role = user.Role?.RoleName ?? string.Empty,
+        IsActive = user.IsActive
+    };
 
     public string Email => User.FindFirstValue(ClaimTypes.Email)!;
 

@@ -73,6 +73,14 @@ public static class Messages
 
     }
 
+    public static class Profile
+    {
+        public const string UpdateSuccess = "Profile updated successfully.";
+        public const string PasswordChangeSuccess = "Password changed successfully.";
+        public const string PasswordMismatch = "New password and confirm password do not match.";
+        public const string CurrentPasswordInvalid = "Current password is incorrect.";
+    }
+
     public static class General
     {
         public const string Success = "Success";
