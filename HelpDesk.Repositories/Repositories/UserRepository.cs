@@ -19,17 +19,29 @@ public class UserRepository : IUserRepository
         return await _context.Users.FirstOrDefaultAsync(x => x.Email == email);
     }
 
+    public async Task<User?> GetUserById(Guid userId)
+    {
+        return await _context.Users
+            .Include(u => u.Role)
+            .FirstOrDefaultAsync(u => u.UserId == userId);
+    }
+
     public async Task<User?> CreateUser(User user)
     {
         var entity = await _context.Users.AddAsync(user);
         await _context.SaveChangesAsync();
-
         return entity.Entity;
+    }
+
+    public async Task UpdateUser(User user)
+    {
+        _context.Users.Update(user);
+        await _context.SaveChangesAsync();
     }
 
     public IQueryable<User> GetUserQuery()
     {
-        return _context.Users.AsQueryable();
+        return _context.Users.Include(u => u.Role).AsQueryable();
     }
 
 }

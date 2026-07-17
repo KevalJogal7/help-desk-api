@@ -2,7 +2,6 @@ namespace HelpDesk.API.Controllers;
 
 using HelpDesk.Services.DTOs.ForgotPasswordDTOs;
 using HelpDesk.Services.DTOs.LoginDTOs;
-using HelpDesk.Services.DTOs.RegisterDTOs;
 using HelpDesk.Services.Interfaces;
 using Microsoft.AspNetCore.Mvc;
 [ApiController]
@@ -20,7 +19,6 @@ public class AuthController : ControllerBase
     public async Task<IActionResult> Login(LoginRequest request)
     {
         var response = await _authService.Login(request);
-
         return StatusCode(response.StatusCode, response);
     }
 
@@ -28,15 +26,6 @@ public class AuthController : ControllerBase
     public async Task<IActionResult> SSOLogin(SSOLoginRequest request)
     {
         var response = await _authService.SSOLogin(request.Token);
-
-        return StatusCode(response.StatusCode, response);
-    }
-
-    [HttpPost("register")]
-    public async Task<IActionResult> Register(RegisterRequest request)
-    {
-        var response = await _authService.Register(request);
-
         return StatusCode(response.StatusCode, response);
     }
 
@@ -44,7 +33,6 @@ public class AuthController : ControllerBase
     public async Task<IActionResult> ForgotPassword(ForgotPasswordRequest request)
     {
         var response = await _authService.ForgotPassword(request);
-
         return StatusCode(response.StatusCode, response);
     }
 }

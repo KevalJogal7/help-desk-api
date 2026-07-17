@@ -8,6 +8,4 @@ public enum TicketStatusEnum
     PENDING_CUSTOMER = 4,
     RESOLVED = 5,
     CLOSED = 6,
-    REOPENED = 7,
-    CANCELLED = 8
 }

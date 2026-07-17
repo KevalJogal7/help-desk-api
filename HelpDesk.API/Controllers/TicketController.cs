@@ -60,6 +60,14 @@ public class TicketController : ControllerBase
         return StatusCode(response.StatusCode, response);
     }
 
+    [HttpPost("status-change")]
+    [Authorize(Roles = $"{nameof(RoleEnum.ADMIN)},{nameof(RoleEnum.SUPPORT_AGENT)}")]
+    public async Task<IActionResult> StatusUpdate(StatusUpdateRequest request)
+    {
+        var response = await _ticketService.StatusUpdate(request);
+        return StatusCode(response.StatusCode, response);
+    }
+
     [HttpGet("category-list")]
     [Authorize]
     public async Task<IActionResult> GetCategoryList()

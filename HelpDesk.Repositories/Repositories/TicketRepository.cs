@@ -18,6 +18,7 @@ public class TicketRepository : ITicketRepository
     {
         return _context.Tickets
             .Include(t => t.CreatedByNavigation)
+            .Include(t => t.AssignedToNavigation)
             .Include(t => t.Priority)
             .Include(t => t.Status)
             .Include(t => t.Category)
@@ -29,6 +30,7 @@ public class TicketRepository : ITicketRepository
     {
         return _context.Tickets
             .Include(t => t.CreatedByNavigation)
+            .Include(t => t.AssignedToNavigation)
             .Include(t => t.Priority)
             .Include(t => t.Status)
             .Include(t => t.Category)

@@ -13,10 +13,7 @@ public partial class User
     public Guid UserId { get; set; }
 
     [StringLength(100)]
-    public string FirstName { get; set; } = null!;
-
-    [StringLength(100)]
-    public string LastName { get; set; } = null!;
+    public string Name { get; set; } = null!;
 
     [StringLength(255)]
     public string Email { get; set; } = null!;

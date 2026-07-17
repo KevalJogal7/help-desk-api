@@ -26,5 +26,8 @@ public class TicketResponse
     public int SubCategoryId { get; set; }
     public string SubCategory { get; set; } = null!;
     public Guid? AssignedTo { get; set; }
-    public bool isEditable { get; set; } = false;
+    public string? AssignedToName { get; set; }
+    public bool IsEditable { get; set; } = false;
+    public bool CanUpdateStatus { get; set; } = false;
+    public bool IsDeleted { get; set; } = false;
 }

@@ -6,7 +6,6 @@ using HelpDesk.Services.Constants;
 using HelpDesk.Services.DTOs.Common;
 using HelpDesk.Services.DTOs.ForgotPasswordDTOs;
 using HelpDesk.Services.DTOs.LoginDTOs;
-using HelpDesk.Services.DTOs.RegisterDTOs;
 using HelpDesk.Services.Enums;
 using HelpDesk.Services.Interfaces;
 using Microsoft.AspNetCore.Http;
@@ -95,7 +94,7 @@ public class AuthService : IAuthService
         {
             AccessToken = token,
             RefreshToken = "",
-            UserName = $"{user.FirstName} {user.LastName}",
+            UserName = user.Name,
             Role = role.ToString(),
             Expiration = DateTime.UtcNow.AddHours(1)
         };
@@ -136,39 +135,6 @@ public class AuthService : IAuthService
         };
 
         return await Login(loginRequest, true);
-    }
-
-    public async Task<BaseResponse<object>> Register(RegisterRequest request)
-    {
-        var existingUser = await _repository.GetByEmailAsync(request.Email);
-
-        if (existingUser != null)
-        {
-            return ResponseFactory.Failure<object>(
-                Messages.Auth.EmailAlreadyExists,
-                StatusCodes.Status409Conflict
-            );
-        }
-
-        var user = new User
-        {
-            RoleId = (int)RoleEnum.USER,
-            FirstName = request.FirstName,
-            LastName = request.LastName,
-            Email = request.Email,
-            IsActive = true,
-        };
-
-        // Hash password
-        user.PasswordHash = _passwordHasher.HashPassword(user, request.Password);
-
-        await _repository.CreateUser(user);
-
-        return ResponseFactory.Success<object>(
-            null,
-            Messages.Auth.RegisterSuccess,
-            StatusCodes.Status201Created
-        );
     }
 
     public async Task<BaseResponse<object>> ForgotPassword(ForgotPasswordRequest request)

@@ -13,12 +13,14 @@ namespace HelpDesk.Services.Services;
 public class TicketService : ITicketService
 {
     private readonly ITicketRepository _repository;
+    private readonly IUserRepository _userRepository;
     private readonly IAuthService _authService;
 
-    public TicketService(ITicketRepository repository, IAuthService authService)
+    public TicketService(ITicketRepository repository, IAuthService authService, IUserRepository userRepository)
     {
         _repository = repository;
         _authService = authService;
+        _userRepository = userRepository;
     }
 
 
@@ -30,12 +32,12 @@ public class TicketService : ITicketService
 
         if(role == RoleEnum.USER)
         {
-            query = query.Where(t => t.CreatedByNavigation.Email == email);
+            query = query.Where(t => t.CreatedByNavigation.Email == email && !t.IsDeleted);
         }
 
         if(role == RoleEnum.SUPPORT_AGENT)
         {
-            query = query.Where(t => t.CreatedByNavigation.Email == email || t.AssignedTo == _authService.UserId);
+            query = query.Where(t => (t.CreatedByNavigation.Email == email || t.AssignedTo == _authService.UserId) && !t.IsDeleted);
         }
 
         if (!string.IsNullOrWhiteSpace(request.Search))
@@ -48,7 +50,8 @@ public class TicketService : ITicketService
                 t.Description.ToLower().Contains(search) || 
                 t.Category.Name.ToLower().Contains(search) || 
                 t.SubCategory.Name.ToLower().Contains(search) || 
-                (t.CreatedByNavigation.FirstName + " " + t.CreatedByNavigation.LastName).ToLower().Contains(search));
+                t.AssignedToNavigation.Name.ToLower().Contains(search) ||
+                t.CreatedByNavigation.Name.ToLower().Contains(search));
         }
 
         if (request.Category > 0)
@@ -90,7 +93,7 @@ public class TicketService : ITicketService
                 TicketNumber = ticket.TicketNumber,
                 Title = ticket.Title,
                 Description = ticket.Description,
-                CreatedBy = $"{ticket.CreatedByNavigation.FirstName} {ticket.CreatedByNavigation.LastName}",
+                CreatedBy = ticket.CreatedByNavigation.Name,
                 CreatedOn = ticket.CreatedOn,
                 Priority = ticket.Priority.PriorityName,
                 Status = ticket.Status.StatusName,
@@ -98,7 +101,8 @@ public class TicketService : ITicketService
                 Category = ticket.Category.Name,
                 SubCategory = ticket.SubCategory.Name,
                 AssignedTo = ticket.AssignedTo,
-                isEditable = ticket.StatusId != (int)TicketStatusEnum.CLOSED && ((ticket.CreatedByNavigation.Email == _authService.Email && ticket.StatusId == (int)TicketStatusEnum.NEW) || _authService.Role == RoleEnum.ADMIN)
+                IsDeleted = ticket.IsDeleted,
+                IsEditable = !ticket.IsDeleted && ticket.StatusId != (int)TicketStatusEnum.CLOSED && ((ticket.CreatedByNavigation.Email == _authService.Email && ticket.StatusId == (int)TicketStatusEnum.NEW) || _authService.Role == RoleEnum.ADMIN)
             });
         }
 
@@ -128,7 +132,7 @@ public class TicketService : ITicketService
         }
 
         if (ticket.CreatedBy != _authService.UserId 
-        && ticket.AssignedTo == _authService.UserId 
+        && ticket.AssignedTo != _authService.UserId 
         && _authService.Role != RoleEnum.ADMIN)
         {
             return ResponseFactory.Failure<TicketResponse>(
@@ -136,6 +140,15 @@ public class TicketService : ITicketService
             StatusCodes.Status403Forbidden);
         }
 
+        bool canUpdateStatus = false;
+        RoleEnum role = _authService.Role;
+        if (role != RoleEnum.USER)
+        {
+            if ((role == RoleEnum.SUPPORT_AGENT && ticket.AssignedTo == _authService.UserId) || role == RoleEnum.ADMIN)
+            {
+                canUpdateStatus = ticket.StatusId >= (int)TicketStatusEnum.ASSIGNED && ticket.StatusId != (int)TicketStatusEnum.CLOSED;
+            }
+        }
 
         TicketResponse response = new TicketResponse
             {
@@ -143,7 +156,7 @@ public class TicketService : ITicketService
                 TicketNumber = ticket.TicketNumber,
                 Title = ticket.Title,
                 Description = ticket.Description,
-                CreatedBy = $"{ticket.CreatedByNavigation.FirstName} {ticket.CreatedByNavigation.LastName}",
+                CreatedBy = ticket.CreatedByNavigation.Name,
                 CreatedOn = ticket.CreatedOn,
                 Priority = ticket.Priority.PriorityName,
                 PriorityId = ticket.PriorityId,
@@ -154,7 +167,9 @@ public class TicketService : ITicketService
                 SubCategory = ticket.SubCategory.Name,
                 SubCategoryId = ticket.SubCategoryId,
                 AssignedTo = ticket.AssignedTo,
-                isEditable = ticket.StatusId != (int)TicketStatusEnum.CLOSED && ((ticket.CreatedByNavigation.Email == _authService.Email && ticket.StatusId == (int)TicketStatusEnum.NEW) || _authService.Role == RoleEnum.ADMIN)
+                AssignedToName = ticket.AssignedToNavigation != null ? ticket.AssignedToNavigation.Name : null,
+                IsEditable = ticket.StatusId != (int)TicketStatusEnum.CLOSED && ((ticket.CreatedByNavigation.Email == _authService.Email && ticket.StatusId == (int)TicketStatusEnum.NEW) || _authService.Role == RoleEnum.ADMIN),
+                CanUpdateStatus = canUpdateStatus                
             };
 
         return ResponseFactory.Success(
@@ -250,6 +265,13 @@ public class TicketService : ITicketService
 
     public async Task<BaseResponse<object>> AssignTicket(TicketAssignRequest request)
     {
+        User? user = await _userRepository.GetUserById(request.AssignedTo);
+        if(!user.IsActive)
+        {
+            return ResponseFactory.Failure<object>(
+                Messages.User.InActiveUser,
+                StatusCodes.Status400BadRequest);
+        }
         Ticket? ticket = await _repository.GetTicketById(request.TicketId);
         if (ticket == null)
         {
@@ -273,7 +295,34 @@ public class TicketService : ITicketService
         
         return ResponseFactory.Success<object>(
             new object(),
-            Messages.Ticket.UpdateSuccess,
+            Messages.Ticket.AssignedSuccess,
+            StatusCodes.Status200OK);
+    }
+
+    public async Task<BaseResponse<object>> StatusUpdate(StatusUpdateRequest request)
+    {
+        Ticket? ticket = await _repository.GetTicketById(request.TicketId);
+        if (ticket == null)
+        {
+            return ResponseFactory.Failure<object>(
+                Messages.General.NotFound,
+                StatusCodes.Status404NotFound);
+        }
+
+        if (ticket.StatusId == (int)TicketStatusEnum.CLOSED)
+        {
+            return ResponseFactory.Failure<object>(
+                Messages.Ticket.TicketClosed,
+                StatusCodes.Status400BadRequest);
+        }  
+
+        ticket.StatusId = request.StatusId;
+        await _repository.UpdateTicket(ticket);
+
+        
+        return ResponseFactory.Success<object>(
+            new object(),
+            Messages.Ticket.StatusUpdateSuccess,
             StatusCodes.Status200OK);
     }
 

@@ -29,6 +29,8 @@ public partial class TicketComment
     [InverseProperty("TicketComments")]
     public virtual Ticket Ticket { get; set; } = null!;
 
+    public bool IsDeleted { get; set; }
+
     [InverseProperty("Comment")]
     public virtual ICollection<TicketAttachment> TicketAttachments { get; set; } = new List<TicketAttachment>();
 }

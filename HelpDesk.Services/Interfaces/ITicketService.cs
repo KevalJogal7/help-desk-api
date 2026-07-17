@@ -14,4 +14,5 @@ public interface ITicketService
     Task<BaseResponse<List<DropdownOption>>> GetStatusList();
     Task<BaseResponse<List<DropdownOption>>> GetPriorityList();
     Task<BaseResponse<object>> AssignTicket(TicketAssignRequest request);
+    Task<BaseResponse<object>> StatusUpdate(StatusUpdateRequest request);
 }

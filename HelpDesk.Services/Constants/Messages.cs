@@ -23,12 +23,8 @@ public static class Messages
     public static class Validation
     {
         // First Name
-        public const string FirstNameRequired = "First name is required.";
-        public const string FirstNameLength = "First name must be between 2 and 100 characters.";
-
-        // Last Name
-        public const string LastNameRequired = "Last name is required.";
-        public const string LastNameLength = "Last name must be between 2 and 100 characters.";
+        public const string NameRequired = "Name is required.";
+        public const string NameLength = "Name must be between 2 and 100 characters.";
 
         // Email
         public const string EmailRequired = "Email is required.";
@@ -39,11 +35,30 @@ public static class Messages
         public const string PasswordRequired = "Password is required.";
         public const string PasswordLength = "Password must be at least 8 characters long.";
         public const string PasswordComplexity = "Password must contain at least one uppercase letter, one lowercase letter, one number, and one special character.";
+
+        // Role
+        public const string RoleRequired = "Role is required.";
+    }
+
+    public static class User
+    {
+        public const string CreateSuccess = "User created successfully.";
+        public const string UpdateSuccess = "User updated successfully.";
+        public const string DeleteSuccess = "User deleted successfully.";
+        public const string StatusToggled = "User status updated successfully.";
+        public const string PasswordRequired = "Password is required when creating a new user.";
+        public const string InActiveUser = "User is not active.";
+    }
+
+    public static class Comment
+    {
+        public const string CommentRequired = "Comment is required.";
+        public const string CommentLength = "Comment cannot exceed 2000 characters.";
+        public const string AddSuccess = "Comment added successfully.";
     }
 
     public static class Ticket
-    {
-        public const string TitleRequired = "Title is required.";
+    {   public const string TitleRequired = "Title is required.";
         public const string TitleLength = "Title must be between 3 and 250 characters.";
         public const string DescriptionRequired = "Description is required.";
         public const string PriorityRequired = "Priority is required.";
@@ -53,6 +68,9 @@ public static class Messages
         public const string UpdateSuccess = "Ticket updated successfully.";
         public const string DeleteSuccess = "Ticket deleted successfully.";
         public const string TicketClosed = "This ticket is closed.";
+        public const string AssignedSuccess = "Ticket assigned successfully.";
+        public const string StatusUpdateSuccess = "Ticket status updated successfully.";
+
     }
 
     public static class General
