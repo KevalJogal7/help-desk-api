@@ -316,7 +316,12 @@ public class TicketService : ITicketService
                 StatusCodes.Status400BadRequest);
         }  
 
+        if(request.StatusId == (int)TicketStatusEnum.CLOSED)
+        {
+            ticket.ClosedDate = DateTime.UtcNow;
+        }
         ticket.StatusId = request.StatusId;
+        ticket.UpdatedOn = DateTime.UtcNow;
         await _repository.UpdateTicket(ticket);
 
         

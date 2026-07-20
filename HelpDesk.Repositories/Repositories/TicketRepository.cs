@@ -69,5 +69,4 @@ public class TicketRepository : ITicketRepository
     {
         return await _context.TicketPriorities.ToListAsync();
     }
-
 }

@@ -179,9 +179,9 @@ public class AuthService : IAuthService
 
         // await _passwordResetRepository.Add(resetToken);
 
-        // var resetLink = $"https://localhost:5173/reset-password?token={Uri.EscapeDataString(token)}";
+        var resetLink = $"https://localhost:5173/reset-password?token={Uri.EscapeDataString(token)}";
 
-        // await _emailService.SendEmailAsync(user.Email, "Reset Password", resetLink);
+        await _emailService.SendEmailAsync(user.Email, "Reset Password", resetLink);
 
         return ResponseFactory.Success<object>(null);
     }
