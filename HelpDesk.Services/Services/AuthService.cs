@@ -9,6 +9,7 @@ using HelpDesk.Services.DTOs.LoginDTOs;
 using HelpDesk.Services.DTOs.ProfileDTOs;
 using HelpDesk.Services.Enums;
 using HelpDesk.Services.Interfaces;
+using Microsoft.AspNetCore.Hosting;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.Extensions.Configuration;
@@ -23,11 +24,12 @@ public class AuthService : IAuthService
     private readonly AzureTokenValidator _azureTokenValidator;
     private readonly IEmailService _emailService;
     private readonly HashSet<string> _internalDomains;
-
     private readonly IHttpContextAccessor _httpContextAccessor;
+    private readonly IConfiguration _configuration;
+    private readonly IWebHostEnvironment _environment;
 
     public AuthService(IUserRepository repository, IJwtService jwtService, AzureTokenValidator azureTokenValidator,
-     IEmailService emailService, IConfiguration configuration, IHttpContextAccessor httpContextAccessor)
+     IEmailService emailService, IConfiguration configuration, IHttpContextAccessor httpContextAccessor, IWebHostEnvironment environment)
     {
         _passwordHasher = new PasswordHasher<User>();
         _repository = repository;
@@ -40,6 +42,8 @@ public class AuthService : IAuthService
             .Get<string[]>()?
             .ToHashSet(StringComparer.OrdinalIgnoreCase)
             ?? new HashSet<string>(StringComparer.OrdinalIgnoreCase);
+        _configuration = configuration;
+        _environment = environment;
     }
 
     private ClaimsPrincipal User => _httpContextAccessor.HttpContext!.User;
@@ -89,15 +93,26 @@ public class AuthService : IAuthService
         }
 
         var token = _jwtService.GenerateJwtToken(user);
+        var refreshToken = _jwtService.GenerateToken();
+        RefreshToken newRefreshToken = new RefreshToken
+        {
+            Id = Guid.NewGuid(),
+            UserId = user.UserId,
+            Token = refreshToken,
+            CreatedAt = DateTime.UtcNow,
+            ExpiresAt = DateTime.UtcNow.AddDays(Convert.ToDouble(_configuration["Jwt:RefreshTokenExpiryInDays"]))
+        };
+
+        await _repository.AddRefreshToken(newRefreshToken);
+
         var role = (RoleEnum)user.RoleId;
 
         var response = new LoginResponse
         {
             AccessToken = token,
-            RefreshToken = "",
-            UserName = user.Name,
+            RefreshToken = refreshToken,
+            UserName = user.Name ?? "",
             Role = role.ToString(),
-            Expiration = DateTime.UtcNow.AddHours(1)
         };
 
         return ResponseFactory.Success(
@@ -138,6 +153,51 @@ public class AuthService : IAuthService
         return await Login(loginRequest, true);
     }
 
+    public async Task<BaseResponse<LoginResponse>> RefreshTokenAsync(string token)
+    {
+        var refreshToken = await _repository.GetByTokenAsync(token);
+
+        if (refreshToken == null || DateTime.UtcNow >= refreshToken.ExpiresAt)
+            return ResponseFactory.Failure<LoginResponse>(
+                Messages.Auth.InvalidToken,
+                StatusCodes.Status401Unauthorized
+            );
+
+        User user = refreshToken.User;
+        if (!user.IsActive)
+        {
+            return ResponseFactory.Failure<LoginResponse>(
+                Messages.Auth.AccountInactive,
+                StatusCodes.Status403Forbidden
+            );
+        }
+
+        if (user.IsDeleted)
+        {
+            return ResponseFactory.Failure<LoginResponse>(
+                Messages.Auth.AccountDeleted,
+                StatusCodes.Status403Forbidden
+            );
+        }
+
+        var accessToken = _jwtService.GenerateJwtToken(user);
+
+        var role = (RoleEnum)user.RoleId;
+        LoginResponse response = new LoginResponse
+        {
+            AccessToken = accessToken,
+            RefreshToken = token,
+            UserName = user.Name ?? "",
+            Role = role.ToString(),
+        };
+
+        return ResponseFactory.Success(
+            response,
+            Messages.Auth.LoginSuccess,
+            StatusCodes.Status200OK
+        );
+    }
+
     public async Task<BaseResponse<object>> ForgotPassword(ForgotPasswordRequest request)
     {
         var user = await _repository.GetByEmailAsync(request.Email);
@@ -167,23 +227,90 @@ public class AuthService : IAuthService
         }
 
         var token = _jwtService.GenerateToken();
+        ResetPasswordToken resetToken = new ResetPasswordToken
+        {
+            Id = Guid.NewGuid(),
+            UserId = user.UserId,
+            Token = token,
+            ExpiresAt = DateTime.UtcNow.AddMinutes(Convert.ToDouble(_configuration["PasswordReset:TokenExpirationMinutes"])),
+            CreatedAt = DateTime.UtcNow,
+            IsUsed = false
+        };
 
-        // var resetToken = new PasswordResetToken
-        // {
-        //     UserId = user.Id,
-        //     Token = token,
-        //     ExpiryDate = DateTime.UtcNow.AddMinutes(30),
-        //     CreatedAt = DateTime.UtcNow,
-        //     IsUsed = false
-        // };
+        await _repository.AddResetPasswordToken(resetToken);
 
-        // await _passwordResetRepository.Add(resetToken);
+        var resetLink = $"{_configuration["Frontend:BaseUrl"]}/reset-password?token={Uri.EscapeDataString(token)}";
 
-        var resetLink = $"https://localhost:5173/reset-password?token={Uri.EscapeDataString(token)}";
+        string subject = "Reset Your Help Desk Password";
 
-        await _emailService.SendEmailAsync(user.Email, "Reset Password", resetLink);
+        var path = Path.Combine(_environment.ContentRootPath, "EmailTemplates", "ResetPassword.html");
 
-        return ResponseFactory.Success<object>(null);
+        var html = await File.ReadAllTextAsync(path);
+
+        html = html.Replace("{{Name}}", user.Name);
+        html = html.Replace("{{ResetLink}}", resetLink);
+
+        await _emailService.SendEmailAsync(user.Email, subject, html);
+
+        return ResponseFactory.Success<object>(
+            new object(),
+            token,
+            StatusCodes.Status200OK);
+    }
+
+    public async Task<BaseResponse<object>> ResetPassword(ResetPasswordTokenRequest request)
+    {
+        var token = await _repository.GetByResetPasswordTokenAsync(request.Token);
+
+        if (token == null || DateTime.UtcNow >= token.ExpiresAt || token.IsUsed)
+            return ResponseFactory.Failure<object>(
+                Messages.Auth.InvalidToken,
+                StatusCodes.Status401Unauthorized
+            );
+
+        User user = token.User;
+        if (!user.IsActive)
+        {
+            return ResponseFactory.Failure<object>(
+                Messages.Auth.AccountInactive,
+                StatusCodes.Status403Forbidden
+            );
+        }
+
+        if (user.IsDeleted)
+        {
+            return ResponseFactory.Failure<object>(
+                Messages.Auth.AccountDeleted,
+                StatusCodes.Status403Forbidden
+            );
+        }
+
+        var verifyResult = _passwordHasher.VerifyHashedPassword(
+            user,
+            user.PasswordHash!,
+            request.NewPassword);
+
+
+        token.IsUsed = true;
+        await _repository.UpdateResetPasswordToken(token);
+
+        if (verifyResult == PasswordVerificationResult.Success)
+        {
+            return ResponseFactory.Success<object>(
+                new object(),
+                Messages.Profile.PasswordChangeSuccess,
+                StatusCodes.Status200OK);
+        }
+
+        user.PasswordHash = _passwordHasher.HashPassword(user, request.NewPassword);
+        user.UpdatedOn = DateTime.UtcNow;
+
+        await _repository.UpdateUser(user);
+
+        return ResponseFactory.Success<object>(
+            new object(),
+            Messages.Profile.PasswordChangeSuccess,
+            StatusCodes.Status200OK);
     }
 
     public async Task<BaseResponse<ProfileResponse>> GetProfile()

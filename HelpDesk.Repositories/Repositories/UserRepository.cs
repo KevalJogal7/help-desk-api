@@ -44,4 +44,35 @@ public class UserRepository : IUserRepository
         return _context.Users.Include(u => u.Role).AsQueryable();
     }
 
+    public async Task AddRefreshToken(RefreshToken token)
+    {
+        await _context.RefreshTokens.AddAsync(token);
+        await _context.SaveChangesAsync();
+    }
+
+    public async Task<RefreshToken?> GetByTokenAsync(string token)
+    {
+        return await _context.RefreshTokens
+            .Include(x => x.User)
+            .FirstOrDefaultAsync(x => x.Token == token);
+    }
+
+    public async Task AddResetPasswordToken(ResetPasswordToken token)
+    {
+        await _context.ResetPasswordTokens.AddAsync(token);
+        await _context.SaveChangesAsync();
+    }
+
+    public async Task UpdateResetPasswordToken(ResetPasswordToken token)
+    {
+        _context.ResetPasswordTokens.Update(token);
+        await _context.SaveChangesAsync();
+    }
+
+    public async Task<ResetPasswordToken?> GetByResetPasswordTokenAsync(string token)
+    {
+        return await _context.ResetPasswordTokens
+            .Include(x => x.User)
+            .FirstOrDefaultAsync(x => x.Token == token);
+    }
 }

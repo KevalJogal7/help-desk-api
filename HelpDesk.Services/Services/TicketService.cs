@@ -208,6 +208,14 @@ public class TicketService : ITicketService
             existing.UpdatedOn = DateTime.UtcNow;
             existing.UpdatedBy = _authService.UserId;
             existing.StatusId = request.StatusId;
+            existing.AssignedTo = request.AssignedTo;
+            existing.AssignedBy = _authService.UserId;
+
+            if (request.StatusId == (int)TicketStatusEnum.NEW)
+            {
+                existing.AssignedTo = null;
+                existing.AssignedBy = null;
+            }
 
             await _repository.UpdateTicket(existing);
 
@@ -320,6 +328,7 @@ public class TicketService : ITicketService
         {
             ticket.ClosedDate = DateTime.UtcNow;
         }
+
         ticket.StatusId = request.StatusId;
         ticket.UpdatedOn = DateTime.UtcNow;
         await _repository.UpdateTicket(ticket);

@@ -4,6 +4,7 @@ using HelpDesk.Services.DTOs.ForgotPasswordDTOs;
 using HelpDesk.Services.DTOs.LoginDTOs;
 using HelpDesk.Services.DTOs.ProfileDTOs;
 using HelpDesk.Services.Interfaces;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 [ApiController]
 [Route("api/[controller]")]
@@ -30,6 +31,13 @@ public class AuthController : ControllerBase
         return StatusCode(response.StatusCode, response);
     }
 
+    [HttpPost("refresh-token")]
+    public async Task<IActionResult> RefreshToken(RefreshTokenRequest request)
+    {
+        var response = await _authService.RefreshTokenAsync(request.RefreshToken);
+        return StatusCode(response.StatusCode, response);
+    }
+
     [HttpPost("forgot-password")]
     public async Task<IActionResult> ForgotPassword(ForgotPasswordRequest request)
     {
@@ -37,7 +45,15 @@ public class AuthController : ControllerBase
         return StatusCode(response.StatusCode, response);
     }
 
+    [HttpPost("reset-password")]
+    public async Task<IActionResult> ResetPassword(ResetPasswordTokenRequest request)
+    {
+        var response = await _authService.ResetPassword(request);
+        return StatusCode(response.StatusCode, response);
+    }
+
     [HttpGet("profile")]
+    [Authorize]
     public async Task<IActionResult> GetProfile()
     {
         var response = await _authService.GetProfile();
@@ -45,6 +61,7 @@ public class AuthController : ControllerBase
     }
 
     [HttpPut("update-profile")]
+    [Authorize]
     public async Task<IActionResult> UpdateProfile(UpdateProfileRequest request)
     {
         var response = await _authService.UpdateProfile(request);
@@ -52,6 +69,7 @@ public class AuthController : ControllerBase
     }
 
     [HttpPut("change-password")]
+    [Authorize]
     public async Task<IActionResult> ChangePassword(ChangePasswordRequest request)
     {
         var response = await _authService.ChangePassword(request);

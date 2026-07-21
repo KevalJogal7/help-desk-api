@@ -10,7 +10,9 @@ public interface IAuthService
 {
     Task<BaseResponse<LoginResponse>> Login(LoginRequest request, Boolean isSSO = false);
     Task<BaseResponse<LoginResponse>> SSOLogin(string token);
+    Task<BaseResponse<LoginResponse>> RefreshTokenAsync(string token);
     Task<BaseResponse<object>> ForgotPassword(ForgotPasswordRequest request);
+    Task<BaseResponse<object>> ResetPassword(ResetPasswordTokenRequest request);
     Task<BaseResponse<ProfileResponse>> GetProfile();
     Task<BaseResponse<ProfileResponse>> UpdateProfile(UpdateProfileRequest request);
     Task<BaseResponse<object>> ChangePassword(ChangePasswordRequest request);

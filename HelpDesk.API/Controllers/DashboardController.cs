@@ -1,6 +1,8 @@
 namespace HelpDesk.API.Controllers;
 
+using HelpDesk.Services.Enums;
 using HelpDesk.Services.Interfaces;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 [ApiController]
 [Route("api/[controller]")]
@@ -14,6 +16,7 @@ public class DashboardController : ControllerBase
     }
 
     [HttpGet]
+    [Authorize(Roles = nameof(RoleEnum.ADMIN))]
     public async Task<IActionResult> GetDashboard()
     {
         var response = await _dashboardService.GetDashboard();

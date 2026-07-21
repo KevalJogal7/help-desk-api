@@ -49,7 +49,7 @@ public class JwtService : IJwtService
 
     public string GenerateToken()
     {
-        var bytes = RandomNumberGenerator.GetBytes(32);
+        var bytes = RandomNumberGenerator.GetBytes(64);
 
         return Convert.ToBase64String(bytes);
     }

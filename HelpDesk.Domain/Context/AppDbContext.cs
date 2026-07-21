@@ -20,6 +20,10 @@ public partial class AppDbContext : DbContext
 
     public virtual DbSet<Category> Categories { get; set; }
 
+    public virtual DbSet<RefreshToken> RefreshTokens { get; set; }
+
+    public virtual DbSet<ResetPasswordToken> ResetPasswordTokens { get; set; }
+
     public virtual DbSet<Role> Roles { get; set; }
 
     public virtual DbSet<SubCategory> SubCategories { get; set; }
@@ -64,6 +68,31 @@ public partial class AppDbContext : DbContext
 
             entity.Property(e => e.CreatedOn).HasDefaultValueSql("CURRENT_TIMESTAMP");
             entity.Property(e => e.IsActive).HasDefaultValue(true);
+        });
+
+        modelBuilder.Entity<RefreshToken>(entity =>
+        {
+            entity.HasKey(e => e.Id).HasName("RefreshTokens_pkey");
+
+            entity.Property(e => e.Id).ValueGeneratedNever();
+            entity.Property(e => e.CreatedAt).HasDefaultValueSql("CURRENT_TIMESTAMP");
+
+            entity.HasOne(d => d.User).WithMany(p => p.RefreshTokens)
+                .OnDelete(DeleteBehavior.ClientSetNull)
+                .HasConstraintName("fk_refreshtokens_user");
+        });
+
+        modelBuilder.Entity<ResetPasswordToken>(entity =>
+        {
+            entity.HasKey(e => e.Id).HasName("ResetPasswordTokens_pkey");
+
+            entity.Property(e => e.Id).ValueGeneratedNever();
+            entity.Property(e => e.CreatedAt).HasDefaultValueSql("CURRENT_TIMESTAMP");
+            entity.Property(e => e.IsUsed).HasDefaultValue(false);
+
+            entity.HasOne(d => d.User).WithMany(p => p.ResetPasswordTokens)
+                .OnDelete(DeleteBehavior.ClientSetNull)
+                .HasConstraintName("fk_resetpasswordtokens_user");
         });
 
         modelBuilder.Entity<Role>(entity =>
@@ -141,6 +170,7 @@ public partial class AppDbContext : DbContext
 
             entity.Property(e => e.CommentId).HasDefaultValueSql("gen_random_uuid()");
             entity.Property(e => e.CreatedOn).HasDefaultValueSql("CURRENT_TIMESTAMP");
+            entity.Property(e => e.IsDeleted).HasDefaultValue(false);
 
             entity.HasOne(d => d.CommentByNavigation).WithMany(p => p.TicketComments)
                 .OnDelete(DeleteBehavior.ClientSetNull)

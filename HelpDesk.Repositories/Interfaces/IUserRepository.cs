@@ -9,4 +9,9 @@ public interface IUserRepository
     Task<User?> CreateUser(User user);
     Task UpdateUser(User user);
     IQueryable<User> GetUserQuery();
+    Task AddRefreshToken(RefreshToken token);
+    Task<RefreshToken?> GetByTokenAsync(string token);
+    Task AddResetPasswordToken(ResetPasswordToken token);
+    Task UpdateResetPasswordToken(ResetPasswordToken token);
+    Task<ResetPasswordToken?> GetByResetPasswordTokenAsync(string token);
 }

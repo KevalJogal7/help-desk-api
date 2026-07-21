@@ -18,6 +18,8 @@ public static class Messages
         // Registration
         public const string EmailAlreadyExists = "A user with this email already exists.";
         public const string RegisterSuccess = "User registered successfully.";
+
+        public const string InvalidToken = "Token is Invalid or Expired.";
     }
 
     public static class Validation

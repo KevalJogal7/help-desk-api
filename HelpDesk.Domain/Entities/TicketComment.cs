@@ -21,6 +21,8 @@ public partial class TicketComment
 
     public DateTime? UpdatedOn { get; set; }
 
+    public bool IsDeleted { get; set; }
+
     [ForeignKey("CommentBy")]
     [InverseProperty("TicketComments")]
     public virtual User CommentByNavigation { get; set; } = null!;
@@ -28,8 +30,6 @@ public partial class TicketComment
     [ForeignKey("TicketId")]
     [InverseProperty("TicketComments")]
     public virtual Ticket Ticket { get; set; } = null!;
-
-    public bool IsDeleted { get; set; }
 
     [InverseProperty("Comment")]
     public virtual ICollection<TicketAttachment> TicketAttachments { get; set; } = new List<TicketAttachment>();

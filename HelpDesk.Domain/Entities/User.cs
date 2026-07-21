@@ -12,9 +12,6 @@ public partial class User
     [Key]
     public Guid UserId { get; set; }
 
-    [StringLength(100)]
-    public string Name { get; set; } = null!;
-
     [StringLength(255)]
     public string Email { get; set; } = null!;
 
@@ -32,8 +29,17 @@ public partial class User
 
     public int RoleId { get; set; }
 
+    [StringLength(255)]
+    public string? Name { get; set; }
+
     [InverseProperty("PerformedByNavigation")]
     public virtual ICollection<AuditLog> AuditLogs { get; set; } = new List<AuditLog>();
+
+    [InverseProperty("User")]
+    public virtual ICollection<RefreshToken> RefreshTokens { get; set; } = new List<RefreshToken>();
+
+    [InverseProperty("User")]
+    public virtual ICollection<ResetPasswordToken> ResetPasswordTokens { get; set; } = new List<ResetPasswordToken>();
 
     [ForeignKey("RoleId")]
     [InverseProperty("Users")]

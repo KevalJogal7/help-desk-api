@@ -6,5 +6,4 @@ public class LoginResponse
     public string RefreshToken { get; set; } = String.Empty;
     public string UserName { get; set; } = String.Empty;
     public string Role { get; set; } = String.Empty;
-    public DateTime Expiration { get; set; }
 }
