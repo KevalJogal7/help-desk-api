@@ -55,7 +55,7 @@ public class GmailEmailService : IEmailService
     {
         var email = new MimeMessage();
 
-        email.From.Add(new MailboxAddress("Help Desk", _settings.FromEmail));
+        email.From.Add(new MailboxAddress(_settings.FromName, _settings.FromEmail));
 
         email.To.Add(MailboxAddress.Parse(to));
 

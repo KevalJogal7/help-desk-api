@@ -11,4 +11,6 @@ public class GmailSettings
     public string FromEmail { get; set; } = string.Empty;
 
     public string ApplicationName { get; set; } = "HelpDesk";
+    
+    public string FromName { get; set; } = "Help Desk";
 }
