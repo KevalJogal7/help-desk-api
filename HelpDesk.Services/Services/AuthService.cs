@@ -23,7 +23,6 @@ public class AuthService : IAuthService
     private readonly PasswordHasher<User> _passwordHasher;
     private readonly AzureTokenValidator _azureTokenValidator;
     private readonly IEmailService _emailService;
-    private readonly HashSet<string> _internalDomains;
     private readonly IHttpContextAccessor _httpContextAccessor;
     private readonly IConfiguration _configuration;
     private readonly IWebHostEnvironment _environment;
@@ -37,11 +36,6 @@ public class AuthService : IAuthService
         _azureTokenValidator = azureTokenValidator;
         _emailService = emailService;
         _httpContextAccessor = httpContextAccessor;
-        _internalDomains = configuration
-            .GetSection("Authentication:InternalDomains")
-            .Get<string[]>()?
-            .ToHashSet(StringComparer.OrdinalIgnoreCase)
-            ?? new HashSet<string>(StringComparer.OrdinalIgnoreCase);
         _configuration = configuration;
         _environment = environment;
     }
@@ -52,29 +46,8 @@ public class AuthService : IAuthService
     {
         var user = await _repository.GetByEmailAsync(request.Email);
 
-        if (user == null)
-        {
-            return ResponseFactory.Failure<LoginResponse>(
-                Messages.Auth.InvalidCredentials,
-                StatusCodes.Status401Unauthorized
-            );
-        }
-
-        if (!user.IsActive)
-        {
-            return ResponseFactory.Failure<LoginResponse>(
-                Messages.Auth.AccountInactive,
-                StatusCodes.Status403Forbidden
-            );
-        }
-
-        if (user.IsDeleted)
-        {
-            return ResponseFactory.Failure<LoginResponse>(
-                Messages.Auth.AccountDeleted,
-                StatusCodes.Status403Forbidden
-            );
-        }
+        var validation = ValidateUser<LoginResponse>(user);
+        if (validation != null) return validation;
 
         if (!isSSO)
         {
@@ -164,21 +137,9 @@ public class AuthService : IAuthService
             );
 
         User user = refreshToken.User;
-        if (!user.IsActive)
-        {
-            return ResponseFactory.Failure<LoginResponse>(
-                Messages.Auth.AccountInactive,
-                StatusCodes.Status403Forbidden
-            );
-        }
 
-        if (user.IsDeleted)
-        {
-            return ResponseFactory.Failure<LoginResponse>(
-                Messages.Auth.AccountDeleted,
-                StatusCodes.Status403Forbidden
-            );
-        }
+        var validation = ValidateUser<LoginResponse>(user);
+        if (validation != null) return validation;
 
         var accessToken = _jwtService.GenerateJwtToken(user);
 
@@ -202,28 +163,16 @@ public class AuthService : IAuthService
     {
         var user = await _repository.GetByEmailAsync(request.Email);
 
-        if (user == null)
+        var validation = ValidateUser<object>(user);
+        if (validation != null)
         {
-            return ResponseFactory.Failure<object>(
-                Messages.Auth.UserNotExists,
-                StatusCodes.Status401Unauthorized
-            );
-        }
+            // For ForgotPassword, a missing user should not reveal account existence
+            if (user == null)
+                return ResponseFactory.Failure<object>(
+                    Messages.Auth.UserNotExists,
+                    StatusCodes.Status401Unauthorized);
 
-        if (!user.IsActive)
-        {
-            return ResponseFactory.Failure<object>(
-                Messages.Auth.AccountInactive,
-                StatusCodes.Status403Forbidden
-            );
-        }
-
-        if (user.IsDeleted)
-        {
-            return ResponseFactory.Failure<object>(
-                Messages.Auth.AccountDeleted,
-                StatusCodes.Status403Forbidden
-            );
+            return validation;
         }
 
         var token = _jwtService.GenerateToken();
@@ -269,21 +218,9 @@ public class AuthService : IAuthService
             );
 
         User user = token.User;
-        if (!user.IsActive)
-        {
-            return ResponseFactory.Failure<object>(
-                Messages.Auth.AccountInactive,
-                StatusCodes.Status403Forbidden
-            );
-        }
 
-        if (user.IsDeleted)
-        {
-            return ResponseFactory.Failure<object>(
-                Messages.Auth.AccountDeleted,
-                StatusCodes.Status403Forbidden
-            );
-        }
+        var validation = ValidateUser<object>(user);
+        if (validation != null) return validation;
 
         var verifyResult = _passwordHasher.VerifyHashedPassword(
             user,
@@ -401,13 +338,44 @@ public class AuthService : IAuthService
     public RoleEnum Role => Enum.Parse<RoleEnum>(User.FindFirstValue(ClaimTypes.Role)!);
 
     public Guid UserId => Guid.Parse(User.FindFirstValue(ClaimTypes.NameIdentifier)!);
+
+    // Returns a failure response if user fails validation, null if user is valid.
+    private static BaseResponse<T>? ValidateUser<T>(User? user)
+    {
+        if (user == null)
+            return ResponseFactory.Failure<T>(
+                Messages.Auth.InvalidCredentials,
+                StatusCodes.Status401Unauthorized);
+
+        if (user.IsDeleted)
+            return ResponseFactory.Failure<T>(
+                Messages.Auth.AccountDeleted,
+                StatusCodes.Status403Forbidden);
+
+        if (!user.IsActive)
+            return ResponseFactory.Failure<T>(
+                Messages.Auth.AccountInactive,
+                StatusCodes.Status403Forbidden);
+
+        return null;
+    }
+
     public bool IsInternalEmail(string email)
     {
         try
         {
             var mail = new MailAddress(email);
 
-            return _internalDomains.Contains(mail.Host.ToLower());
+            var internalDomains = _configuration.GetSection("Authentication:InternalDomains").Get<string[]>();
+
+            if (internalDomains == null || internalDomains.Length == 0)
+            {
+                return false;
+            }
+
+            return internalDomains.Contains(
+                mail.Host,
+                StringComparer.OrdinalIgnoreCase);
         }
         catch
         {
