@@ -16,7 +16,7 @@ public class TicketService : ITicketService
     private readonly IUserRepository _userRepository;
     private readonly IAuthService _authService;
 
-    public TicketService(ITicketRepository repository, IAuthService authService, IUserRepository userRepository)
+    public TicketService(ITicketRepository repository, IAuthService authService, IUserRepository userRepository, IRealtimeService realtimeService)
     {
         _repository = repository;
         _authService = authService;
@@ -146,7 +146,7 @@ public class TicketService : ITicketService
         {
             if ((role == RoleEnum.SUPPORT_AGENT && ticket.AssignedTo == _authService.UserId) || role == RoleEnum.ADMIN)
             {
-                canUpdateStatus = ticket.StatusId >= (int)TicketStatusEnum.ASSIGNED && ticket.StatusId != (int)TicketStatusEnum.CLOSED;
+                canUpdateStatus = !ticket.IsDeleted && ticket.StatusId >= (int)TicketStatusEnum.ASSIGNED && ticket.StatusId != (int)TicketStatusEnum.CLOSED;
             }
         }
 
@@ -168,8 +168,9 @@ public class TicketService : ITicketService
                 SubCategoryId = ticket.SubCategoryId,
                 AssignedTo = ticket.AssignedTo,
                 AssignedToName = ticket.AssignedToNavigation != null ? ticket.AssignedToNavigation.Name : null,
-                IsEditable = ticket.StatusId != (int)TicketStatusEnum.CLOSED && ((ticket.CreatedByNavigation.Email == _authService.Email && ticket.StatusId == (int)TicketStatusEnum.NEW) || _authService.Role == RoleEnum.ADMIN),
-                CanUpdateStatus = canUpdateStatus                
+                IsEditable = !ticket.IsDeleted && ticket.StatusId != (int)TicketStatusEnum.CLOSED && ((ticket.CreatedByNavigation.Email == _authService.Email && ticket.StatusId == (int)TicketStatusEnum.NEW) || _authService.Role == RoleEnum.ADMIN),
+                CanUpdateStatus = canUpdateStatus,
+                IsDeleted = ticket.IsDeleted                
             };
 
         return ResponseFactory.Success(

@@ -48,7 +48,7 @@ public class UserController : ControllerBase
         return StatusCode(response.StatusCode, response);
     }
 
-    [HttpDelete("{id:guid}")]
+    [HttpDelete("delete/{id:guid}")]
     [Authorize(Roles = nameof(RoleEnum.ADMIN))]
     public async Task<IActionResult> DeleteUser(Guid id)
     {
