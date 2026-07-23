@@ -16,7 +16,7 @@ public class TicketService : ITicketService
     private readonly IUserRepository _userRepository;
     private readonly IAuthService _authService;
 
-    public TicketService(ITicketRepository repository, IAuthService authService, IUserRepository userRepository, IRealtimeService realtimeService)
+    public TicketService(ITicketRepository repository, IAuthService authService, IUserRepository userRepository)
     {
         _repository = repository;
         _authService = authService;
